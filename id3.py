@@ -3,8 +3,14 @@ from collections import namedtuple
 
 
 class Dataset(object):
+    """Represents a tabular, tuple-based dataset with ad-hoc functionality,
+    supporting only ID3-related methods."""
 
     def __init__(self, data_list, is_formatted=True):
+        """Initialises the data set, with is_formatted as an assumption
+        that the .txt file with '\t'-separated values has headers in its
+        first line with the target attribute as the last column of the
+        headers."""
         self.data = []
         self.headers = None
         self.target = None
@@ -14,6 +20,9 @@ class Dataset(object):
               (", ".join(self.headers), self.target))
 
     def populate_data(self, data_list):
+        """Populates the dataset with the given pre-processed list of
+        lines read from the .txt file. Each tuple is stored as a
+        namedtuple."""
         headers = data_list[0].rstrip().split('\t')
         if self._is_formatted:
             self.headers = headers[:-1]
@@ -24,6 +33,10 @@ class Dataset(object):
             self.data.append(Data(*tup))
 
     def entropy(self, r, s=None, dataset=None):
+        """Calculates the entropy of an attribute r, or attributes
+        r and s, with r acting as the target attribute and s as the
+        splitting attribute.
+        """
         if not dataset:
             dataset = self.data
         if not s:
@@ -45,9 +58,14 @@ class Dataset(object):
             return entropy
 
     def information_gain(self, r, s):
+        """Calculates the information gain (decrease in entropy) after
+        splitting target attribute r with splitting attribute s."""
         return self.entropy(r) - self.entropy(r, s)
 
     def id3(self, target, attrs, dataset):
+        """Recursively constructs a decision tree given a target
+        attribute, a list of predicting attributes, and an example
+        dataset. Returns a tree of Node objects."""
         t_values = [getattr(tup, target) for tup in dataset]
         if len(set(t_values)) == 1:
             val = set(t_values).pop()
@@ -76,6 +94,9 @@ class Dataset(object):
 
 
 class Node(object):
+    """Node of a decision tree, provides basic functionality
+    of representing a decision tree with arbitrary labels
+    and number of children."""
 
     def __init__(self, value, children=None):
         self.value = value
@@ -96,6 +117,7 @@ class Node(object):
             tab_lvl += 1
         for child in self.children:
             child.print(lvl, tab_lvl)
+
 
 if __name__ == '__main__':
     with open('data_titanic.txt') as fd:
