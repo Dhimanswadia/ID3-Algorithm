@@ -1,4 +1,4 @@
-from numpy import log2
+from math import log2
 
 
 class Dataset(object):
