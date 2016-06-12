@@ -1,5 +1,4 @@
 from numpy import log2
-from collections import namedtuple
 
 
 class Dataset(object):
@@ -27,10 +26,10 @@ class Dataset(object):
         if self._is_formatted:
             self.headers = headers[:-1]
             self.target = headers[-1]
-        Data = namedtuple('Data', headers)
         for tup in data_list[1:]:
             tup = tup.rstrip().split('\t')
-            self.data.append(Data(*tup))
+            tup = {k: v for k, v in zip(self.headers + [self.target], tup)}
+            self.data.append(tup)
 
     def entropy(self, r, s=None, dataset=None):
         """Calculates the entropy of an attribute r, or attributes
@@ -40,7 +39,7 @@ class Dataset(object):
         if not dataset:
             dataset = self.data
         if not s:
-            values = [getattr(tup, r) for tup in dataset]
+            values = [tup[r] for tup in dataset]
             count = {val: values.count(val) for val in values}
             entropy = 0
             for val in count.keys():
@@ -48,12 +47,12 @@ class Dataset(object):
                 entropy -= p * log2(p)
             return entropy
         else:
-            s_values = [getattr(tup, s) for tup in dataset]
+            s_values = [tup[s] for tup in dataset]
             s_count = {val: s_values.count(val) for val in s_values}
             entropy = 0
             for val in s_count.keys():
                 p = s_count[val] / len(s_values)
-                subset = [tup for tup in dataset if getattr(tup, s) == val]
+                subset = [tup for tup in dataset if tup[s] == val]
                 entropy += p * self.entropy(r, dataset=subset)
             return entropy
 
@@ -66,7 +65,7 @@ class Dataset(object):
         """Recursively constructs a decision tree given a target
         attribute, a list of predicting attributes, and an example
         dataset. Returns a tree of Node objects."""
-        t_values = [getattr(tup, target) for tup in dataset]
+        t_values = [tup[target] for tup in dataset]
         if len(set(t_values)) == 1:
             val = set(t_values).pop()
             return Node("{}: {}".format(target, val))
@@ -77,12 +76,12 @@ class Dataset(object):
             info_gain = {a: self.information_gain(target, a) for a in attrs}
             attr = max(attrs, key=lambda x: info_gain[x])
             root = Node(attr)
-            a_values = sorted(set([getattr(tup, attr) for tup in dataset]))
+            a_values = sorted(set([tup[attr] for tup in dataset]))
             for val in a_values:
                 child = root.add(Node(val))
-                subset = [tup for tup in dataset if getattr(tup, attr) == val]
+                subset = [tup for tup in dataset if tup[attr] == val]
                 if not subset:
-                    subset_t_values = [getattr(tup, target) for tup in subset]
+                    subset_t_values = [tup[target] for tup in subset]
                     common = max(set(subset_t_values), key=subset_t_values.count)
                     child.add(Node("{}: {}".format(target, common)))
                 else:
