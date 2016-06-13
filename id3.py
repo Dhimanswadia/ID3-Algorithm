@@ -197,7 +197,7 @@ if __name__ == '__main__':
         with open(filename) as fd:
             f = fd.readlines()
         d = Dataset(f)
+        print("")
         d.build_tree().print()
-        d.print_ruleset()
-        print(d.accuracy())
+        print("\nTraining set accuracy: {}".format(d.accuracy()))
 
