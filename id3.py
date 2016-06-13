@@ -199,5 +199,5 @@ if __name__ == '__main__':
         d = Dataset(f)
         print("")
         d.build_tree().print()
-        print("\nTraining set accuracy: {}".format(d.accuracy()))
+        print("\nTraining set accuracy: {0:.2f} %".format(d.accuracy()*100))
 
