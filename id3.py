@@ -183,10 +183,21 @@ class Node(object):
 
 
 if __name__ == '__main__':
-    with open('data_titanic.txt') as fd:
-        f = fd.readlines()
-    d = Dataset(f)
-    d.build_tree().print()
-    d.print_ruleset()
-    print(d.accuracy())
+    import sys, os
+
+    if not sys.argv[1]:
+        print("Usage: python3 id3.py [filename.txt]")
+
+    elif not os.path.isfile(sys.argv[0]):
+        print("File does not exist.")
+        print("Usage: python3 id3.py [filename.txt]")
+
+    else:
+        filename = sys.argv[1]
+        with open(filename) as fd:
+            f = fd.readlines()
+        d = Dataset(f)
+        d.build_tree().print()
+        d.print_ruleset()
+        print(d.accuracy())
 
