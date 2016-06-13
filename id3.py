@@ -100,27 +100,39 @@ class Dataset(object):
     def derive_ruleset(self):
         if self.tree is None:
             self.build_tree()
-        self.ruleset = [rule for rule in self.paths(self.tree)]
+        ruleset_list = [rule for rule in self.paths(self.tree)]
+        rules = []
+        for r in ruleset_list:
+            attr_pairs, result = tuple(zip(*(iter(r[:-1]),) * 2)), r[-1]
+            name = "IF " + " AND ".join(["({} == {})".format(*a) for a in attr_pairs]) + \
+                   " THEN {} = {}".format(result['attr'], result['val'])
+            rules.append((name, attr_pairs, {result['attr']: result['val']}))
+        self.ruleset = rules
+        return rules
+
+    def eval_condition(self, tup, attr_val_pairs):
+        results = []
+        for attr, val in attr_val_pairs:
+            exp = tup[attr] == val
+            results.append(exp)
+        return all(results)
 
     def print_ruleset(self):
         if self.ruleset is None:
             self.derive_ruleset()
         print("\nRuleset: ")
         for rule in self.ruleset:
-            pred, result = rule[:-1], rule[-1]
-            attr_pairs = tuple(zip(*(iter(pred),) * 2))
-            rulestr = 'IF '
-            for i in attr_pairs:
-                rulestr += "({} == {}) AND ".format(i[0], i[1])
-            rulestr = rulestr[:-4] + "THEN " + "{} = {}".format(
-                result['attr'], result['val'])
-            print(rulestr)
+            print(rule[0])
 
     def accuracy(self):
-        if self.tree is None:
-            raise ValueError("tree is empty")
+        if self.ruleset is None:
+            self.derive_ruleset()
+        total_correct = 0
         for rule in self.ruleset:
-            pass
+            data_subset = [t for t in self.data if self.eval_condition(t, rule[1])]
+            correct_preds = [t for t in data_subset if t[self.target] == rule[2][self.target]]
+            total_correct += len(correct_preds)
+        return total_correct / len(self.data)
 
     def paths(self, node, path=None):
         if path is None:
@@ -176,3 +188,5 @@ if __name__ == '__main__':
     d = Dataset(f)
     d.build_tree().print()
     d.print_ruleset()
+    print(d.accuracy())
+
